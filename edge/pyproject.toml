@@ -1,0 +1,116 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "edge"
+version = "1.0.0"
+description = "Face Recognition Edge Service"
+readme = "README.md"
+requires-python = ">=3.11"
+authors = [
+    {name = "Face Recognition Attendance System"},
+]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+]
+
+dependencies = [
+    "opencv-python>=4.8.0",
+    "numpy>=1.24.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+    "onnxruntime>=1.15.0",
+    "faiss-cpu>=1.7.4",
+    "requests>=2.31.0",
+    "pydantic>=2.0.0",
+    "python-dotenv>=1.0.0",
+    "pillow>=10.0.0",
+    "scipy>=1.11.0",
+    "scikit-image>=0.21.0",
+    "aiohttp>=3.8.0",
+    "websockets>=11.0.0",
+    "prometheus-client>=0.17.0",
+    "structlog>=23.0.0",
+    "typer>=0.9.0",
+    "rich>=13.0.0",
+    "minio>=7.1.0",
+    "psutil>=5.9.0",
+    "tqdm>=4.65.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "isort>=5.12.0",
+    "flake8>=6.0.0",
+    "mypy>=1.5.0",
+    "pre-commit>=3.3.0",
+]
+gpu = [
+    "onnxruntime-gpu>=1.15.0",
+    "torch>=2.0.0",
+    "torchvision>=0.15.0",
+]
+
+[project.scripts]
+edge = "edge.main:main"
+
+[tool.hatch.build.targets.wheel]
+packages = ["edge"]
+
+[tool.black]
+line-length = 88
+target-version = ['py311']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | _build
+  | buck-out
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+line_length = 88
+
+[tool.mypy]
+python_version = "3.11"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+minversion = "7.0"
+addopts = "-ra -q --strict-markers"
+testpaths = [
+    "tests",
+]
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+]

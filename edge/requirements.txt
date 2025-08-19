@@ -1,0 +1,46 @@
+# Computer Vision and ML
+opencv-python>=4.8.0
+numpy>=1.24.0
+faiss-cpu>=1.7.4
+
+# ONNX Runtime for ML models
+onnxruntime>=1.16.0
+
+# HTTP client for API integration
+aiohttp>=3.9.0
+aiohttp-cors>=0.7.0
+httpx>=0.25.0
+
+# Object storage
+minio>=7.2.0
+
+# Configuration and environment
+python-dotenv>=1.0.0
+pydantic>=2.5.0
+pydantic-settings>=2.1.0
+
+# Logging and monitoring
+structlog>=23.2.0
+rich>=13.7.0
+
+# Async utilities
+asyncio-mqtt>=0.16.0
+
+# Image processing utilities
+Pillow>=10.1.0
+
+# Data structures and utilities
+dataclasses-json>=0.6.0
+
+# Development dependencies
+pytest>=7.4.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.12.0
+ruff>=0.1.0
+black>=23.11.0
+mypy>=1.7.0
+
+# Optional dependencies for advanced features
+# torch>=2.1.0  # Uncomment for PyTorch models
+# torchvision>=0.16.0  # Uncomment for PyTorch vision models
+# tensorflow>=2.15.0  # Uncomment for TensorFlow models

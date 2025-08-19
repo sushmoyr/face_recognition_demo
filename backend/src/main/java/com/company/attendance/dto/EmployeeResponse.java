@@ -11,18 +11,31 @@ import java.util.UUID;
  */
 @Data
 public class EmployeeResponse {
-    
-    private UUID id;
-    private String employeeCode;
-    private String firstName;
-    private String lastName;
-    private String fullName;
-    private String email;
-    private String department;
-    private String position;
-    private LocalDate hireDate;
-    private String status;
-    private Integer faceTemplateCount;
-    private Instant createdAt;
-    private Instant updatedAt;
+
+	private UUID id;
+
+	private String employeeCode;
+
+	private String firstName;
+
+	private String lastName;
+
+	private String fullName;
+
+	private String email;
+
+	private String department;
+
+	private String position;
+
+	private LocalDate hireDate;
+
+	private String status;
+
+	private Integer faceTemplateCount;
+
+	private Instant createdAt;
+
+	private Instant updatedAt;
+
 }

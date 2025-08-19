@@ -12,7 +12,7 @@ import java.util.UUID;
 
 /**
  * Request DTO for generating attendance reports.
- * 
+ *
  * Contains report parameters and filters.
  */
 @Data
@@ -20,24 +20,25 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AttendanceReportRequest {
-    
-    @NotNull(message = "Start date is required")
-    private LocalDate startDate;
-    
-    @NotNull(message = "End date is required")
-    private LocalDate endDate;
-    
-    private List<UUID> employeeIds;
-    
-    private List<String> departments;
-    
-    private String reportType; // SUMMARY, DETAILED, EXCEPTIONS
-    
-    private String format; // JSON, CSV, PDF
-    
-    private Boolean includeAbsences;
-    
-    private Boolean includeLateArrivals;
-    
-    private Boolean includeOvertimeHours;
+
+	@NotNull(message = "Start date is required")
+	private LocalDate startDate;
+
+	@NotNull(message = "End date is required")
+	private LocalDate endDate;
+
+	private List<UUID> employeeIds;
+
+	private List<String> departments;
+
+	private String reportType; // SUMMARY, DETAILED, EXCEPTIONS
+
+	private String format; // JSON, CSV, PDF
+
+	private Boolean includeAbsences;
+
+	private Boolean includeLateArrivals;
+
+	private Boolean includeOvertimeHours;
+
 }

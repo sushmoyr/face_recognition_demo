@@ -7,14 +7,23 @@ import lombok.Data;
  */
 @Data
 public class DailyAttendanceSummary {
-    
-    private String date;
-    private Long totalEmployeesIn;
-    private Long totalEmployeesOut;
-    private Long lateArrivals;
-    private Long earlyDepartures;
-    private Long incompleteRecords;
-    private Double averageWorkingHours;
-    private Long totalRecognitionEvents;
-    private Long successfulMatches;
+
+	private String date;
+
+	private Long totalEmployeesIn;
+
+	private Long totalEmployeesOut;
+
+	private Long lateArrivals;
+
+	private Long earlyDepartures;
+
+	private Long incompleteRecords;
+
+	private Double averageWorkingHours;
+
+	private Long totalRecognitionEvents;
+
+	private Long successfulMatches;
+
 }

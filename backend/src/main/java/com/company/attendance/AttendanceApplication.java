@@ -9,21 +9,16 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 
 /**
  * Main Spring Boot application class for the Face Recognition Attendance System.
- * 
- * This application provides REST APIs for managing employees, face templates,
- * devices, recognition events, and attendance records with timezone support
- * for Asia/Dhaka.
- * 
- * Features:
- * - Employee management with face enrollment
- * - Camera/device registration and management
- * - Real-time face recognition event processing
- * - Automatic attendance calculation with shift logic
- * - Comprehensive reporting and analytics
- * - JWT-based authentication with role-based access control
- * - MinIO integration for face snapshot storage
- * - PostgreSQL with pgvector for embedding storage and similarity search
- * 
+ *
+ * This application provides REST APIs for managing employees, face templates, devices,
+ * recognition events, and attendance records with timezone support for Asia/Dhaka.
+ *
+ * Features: - Employee management with face enrollment - Camera/device registration and
+ * management - Real-time face recognition event processing - Automatic attendance
+ * calculation with shift logic - Comprehensive reporting and analytics - JWT-based
+ * authentication with role-based access control - MinIO integration for face snapshot
+ * storage - PostgreSQL with pgvector for embedding storage and similarity search
+ *
  * @author Face Recognition Attendance System
  * @version 1.0.0
  */
@@ -34,7 +29,8 @@ import org.springframework.transaction.annotation.EnableTransactionManagement;
 @EnableScheduling
 public class AttendanceApplication {
 
-    public static void main(String[] args) {
-        SpringApplication.run(AttendanceApplication.class, args);
-    }
+	public static void main(String[] args) {
+		SpringApplication.run(AttendanceApplication.class, args);
+	}
+
 }

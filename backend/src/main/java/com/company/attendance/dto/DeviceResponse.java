@@ -10,7 +10,7 @@ import java.util.UUID;
 
 /**
  * Response DTO for device data.
- * 
+ *
  * Contains public device information for API responses.
  */
 @Data
@@ -18,18 +18,31 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class DeviceResponse {
-    
-    private UUID id;
-    private String deviceCode;
-    private String name;
-    private String location;
-    private String ipAddress;
-    private String macAddress;
-    private String status;
-    private String version;
-    private String capabilities;
-    private Instant lastHeartbeat;
-    private String metadata;
-    private Instant createdAt;
-    private Instant updatedAt;
+
+	private UUID id;
+
+	private String deviceCode;
+
+	private String name;
+
+	private String location;
+
+	private String ipAddress;
+
+	private String macAddress;
+
+	private String status;
+
+	private String version;
+
+	private String capabilities;
+
+	private Instant lastHeartbeat;
+
+	private String metadata;
+
+	private Instant createdAt;
+
+	private Instant updatedAt;
+
 }

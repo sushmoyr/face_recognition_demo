@@ -10,7 +10,7 @@ import java.util.UUID;
 
 /**
  * Response DTO for recognition event data.
- * 
+ *
  * Contains recognition event information for API responses.
  */
 @Data
@@ -18,17 +18,29 @@ import java.util.UUID;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RecognitionEventResponse {
-    
-    private UUID id;
-    private UUID employeeId;
-    private String employeeCode;
-    private String employeeName;
-    private UUID deviceId;
-    private String deviceCode;
-    private String deviceName;
-    private Double confidenceScore;
-    private String snapshotUrl;
-    private Boolean isMatched;
-    private Instant eventTime;
-    private Instant createdAt;
+
+	private UUID id;
+
+	private UUID employeeId;
+
+	private String employeeCode;
+
+	private String employeeName;
+
+	private UUID deviceId;
+
+	private String deviceCode;
+
+	private String deviceName;
+
+	private Double confidenceScore;
+
+	private String snapshotUrl;
+
+	private Boolean isMatched;
+
+	private Instant eventTime;
+
+	private Instant createdAt;
+
 }

@@ -10,15 +10,15 @@ import org.springframework.boot.web.client.RestTemplateBuilder;
  */
 @Configuration
 public class HttpClientConfig {
-    
-    /**
-     * RestTemplate bean for HTTP client operations.
-     */
-    @Bean
-    public RestTemplate restTemplate(RestTemplateBuilder builder) {
-        return builder
-                .setConnectTimeout(java.time.Duration.ofSeconds(10))
-                .setReadTimeout(java.time.Duration.ofSeconds(30))
-                .build();
-    }
+
+	/**
+	 * RestTemplate bean for HTTP client operations.
+	 */
+	@Bean
+	public RestTemplate restTemplate(RestTemplateBuilder builder) {
+		return builder.setConnectTimeout(java.time.Duration.ofSeconds(10))
+			.setReadTimeout(java.time.Duration.ofSeconds(30))
+			.build();
+	}
+
 }

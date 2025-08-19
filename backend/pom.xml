@@ -116,12 +116,13 @@
             <version>8.5.7</version>
         </dependency>
 
-        <!-- Encryption -->
+        <!-- Encryption - Temporarily disabled due to dependency issue
         <dependency>
             <groupId>org.jasypt</groupId>
             <artifactId>jasypt-spring-boot-starter</artifactId>
             <version>3.0.5</version>
         </dependency>
+        -->
 
         <!-- Metrics -->
         <dependency>

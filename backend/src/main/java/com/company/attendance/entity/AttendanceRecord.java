@@ -71,7 +71,7 @@ public class AttendanceRecord {
     
     @Enumerated(EnumType.STRING)
     @Column(name = "status", nullable = false)
-    private AttendanceStatus status = AttendanceStatus.VALID;
+    private AttendanceStatus status;
     
     @CreationTimestamp
     @Column(name = "created_at", nullable = false, updatable = false)
@@ -107,7 +107,7 @@ public class AttendanceRecord {
     public boolean hasComplianceIssues() {
         return Boolean.TRUE.equals(isLate) || 
                Boolean.TRUE.equals(isEarlyLeave) || 
-               status != AttendanceStatus.VALID;
+               !status.isCompliant();
     }
     
     /**
@@ -122,13 +122,5 @@ public class AttendanceRecord {
         int hours = durationMinutes / 60;
         int minutes = durationMinutes % 60;
         return String.format("%02d:%02d", hours, minutes);
-    }
-    
-    public enum EventType {
-        IN, OUT
-    }
-    
-    public enum AttendanceStatus {
-        VALID, INVALID, ADJUSTED, DISPUTED
     }
 }

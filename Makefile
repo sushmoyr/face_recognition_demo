@@ -80,6 +80,11 @@ test-backend:
 	@echo "Running backend tests..."
 	cd backend && ./mvnw test
 
+# Run attendance policy tests specifically
+test-attendance:
+	@echo "Running attendance policy tests..."
+	cd backend && ./mvnw test -Dtest=AttendancePolicyServiceTest
+
 # Run edge tests
 test-edge:
 	@echo "Running edge tests..."

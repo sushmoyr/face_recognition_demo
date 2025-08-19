@@ -2,10 +2,13 @@ package com.company.attendance.service;
 
 import com.company.attendance.entity.AttendanceRecord;
 import com.company.attendance.entity.Employee;
+import com.company.attendance.entity.EventType;
 import com.company.attendance.entity.RecognitionEvent;
 import com.company.attendance.entity.Shift;
 import com.company.attendance.repository.AttendanceRecordRepository;
 import com.company.attendance.repository.EmployeeScheduleRepository;
+import com.company.attendance.service.AttendancePolicyService.AttendancePolicyEvaluation;
+import com.company.attendance.util.TimezoneUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Value;
@@ -30,6 +33,8 @@ public class AttendanceService {
     
     private final AttendanceRecordRepository attendanceRecordRepository;
     private final EmployeeScheduleRepository employeeScheduleRepository;
+    private final AttendancePolicyService attendancePolicyService;
+    private final TimezoneUtils timezoneUtils;
     
     @Value("${app.attendance.entry-window-start:05:00}")
     private String entryWindowStart;
@@ -76,7 +81,7 @@ public class AttendanceService {
         }
         
         // Determine if this should be IN or OUT based on time windows and previous records
-        AttendanceRecord.EventType eventType = determineEventType(employee.getId(), attendanceDate, eventLocalTime);
+        EventType eventType = determineEventType(employee.getId(), attendanceDate, eventLocalTime);
         
         // Get employee's shift for this day
         Optional<Shift> shift = getEmployeeShiftForDate(employee.getId(), attendanceDate, eventTime.getDayOfWeek().getValue());
@@ -97,7 +102,7 @@ public class AttendanceService {
         }
         
         // Calculate duration for OUT events
-        if (eventType == AttendanceRecord.EventType.OUT) {
+        if (eventType == EventType.OUT) {
             calculateDuration(attendanceRecord);
         }
         
@@ -127,7 +132,7 @@ public class AttendanceService {
     /**
      * Determine if this should be an IN or OUT event.
      */
-    private AttendanceRecord.EventType determineEventType(UUID employeeId, LocalDate date, LocalTime time) {
+    private EventType determineEventType(UUID employeeId, LocalDate date, LocalTime time) {
         // Check the last record for this employee on this date
         Optional<AttendanceRecord> lastInRecord = attendanceRecordRepository.findLastInRecordForDate(employeeId, date);
         
@@ -139,16 +144,16 @@ public class AttendanceService {
         
         // If no IN record for today and within entry window, it's IN
         if (lastInRecord.isEmpty() && isWithinTimeWindow(time, entryStart, entryEnd)) {
-            return AttendanceRecord.EventType.IN;
+            return EventType.IN;
         }
         
         // If there's an IN record and within exit window, it's OUT
         if (lastInRecord.isPresent() && isWithinTimeWindow(time, exitStart, exitEnd)) {
-            return AttendanceRecord.EventType.OUT;
+            return EventType.OUT;
         }
         
         // Default logic: if there's no unmatched IN for today, it's IN; otherwise OUT
-        return lastInRecord.isEmpty() ? AttendanceRecord.EventType.IN : AttendanceRecord.EventType.OUT;
+        return lastInRecord.isEmpty() ? EventType.IN : EventType.OUT;
     }
     
     /**
@@ -175,11 +180,11 @@ public class AttendanceService {
      * Calculate compliance flags (late, early leave, etc.).
      */
     private void calculateComplianceFlags(AttendanceRecord record, Shift shift, LocalTime eventTime) {
-        if (record.getEventType() == AttendanceRecord.EventType.IN) {
+        if (record.getEventType() == EventType.IN) {
             // Check if late
             boolean isLate = shift.isLateEntry(eventTime);
             record.setIsLate(isLate);
-        } else if (record.getEventType() == AttendanceRecord.EventType.OUT) {
+        } else if (record.getEventType() == EventType.OUT) {
             // Check if early leave
             boolean isEarlyLeave = shift.isEarlyLeave(eventTime);
             record.setIsEarlyLeave(isEarlyLeave);

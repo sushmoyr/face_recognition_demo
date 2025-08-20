@@ -109,6 +109,15 @@ public class RecognitionEvent {
 		return null;
 	}
 
+	// Additional getters for controller compatibility
+	public Double getConfidenceScore() {
+		return this.similarityScore;
+	}
+
+	public Instant getEventTime() {
+		return this.capturedAt;
+	}
+
 	public enum RecognitionStatus {
 
 		PENDING, PROCESSED, FAILED, DUPLICATE

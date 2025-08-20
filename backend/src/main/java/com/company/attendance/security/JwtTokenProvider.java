@@ -86,6 +86,13 @@ public class JwtTokenProvider {
 	}
 
 	/**
+	 * Alias for getUsernameFromToken - used by AuthController.
+	 */
+	public String getUsername(String token) {
+		return getUsernameFromToken(token);
+	}
+
+	/**
 	 * Validate JWT token.
 	 */
 	public boolean validateToken(String authToken) {
@@ -131,6 +138,22 @@ public class JwtTokenProvider {
 		catch (Exception e) {
 			return true;
 		}
+	}
+
+	// Additional methods for controller support
+	public String createToken(Authentication authentication) {
+		return generateToken(authentication);
+	}
+
+	public long getTokenValidityInSeconds() {
+		return jwtExpiration / 1000;
+	}
+
+	public org.springframework.security.core.Authentication getAuthentication(String token) {
+		String username = getUsernameFromToken(token);
+		// Return a simple authentication token
+		return new org.springframework.security.authentication.UsernamePasswordAuthenticationToken(username, null,
+				java.util.Collections.emptyList());
 	}
 
 }

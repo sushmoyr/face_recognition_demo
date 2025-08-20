@@ -19,16 +19,16 @@ WHERE id IN (
 
 -- Add unique constraint on dedup_hash for non-null values
 -- Note: NULL values are not considered duplicates in unique constraints
-CREATE UNIQUE INDEX CONCURRENTLY idx_recognition_events_dedup_hash_unique 
+CREATE UNIQUE INDEX idx_recognition_events_dedup_hash_unique 
 ON recognition_events (dedup_hash) 
 WHERE dedup_hash IS NOT NULL;
 
 -- Add partial index on status for performance
-CREATE INDEX CONCURRENTLY idx_recognition_events_status_captured_at 
+CREATE INDEX idx_recognition_events_status_captured_at 
 ON recognition_events (status, captured_at);
 
 -- Add index for deduplication queries
-CREATE INDEX CONCURRENTLY idx_recognition_events_employee_device_captured 
+CREATE INDEX idx_recognition_events_employee_device_captured 
 ON recognition_events (employee_id, device_id, captured_at)
 WHERE status != 'DUPLICATE';
 

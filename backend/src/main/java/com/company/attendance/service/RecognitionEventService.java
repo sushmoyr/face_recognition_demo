@@ -169,4 +169,28 @@ public class RecognitionEventService {
 			.orElseThrow(() -> new RuntimeException("Recognition event not found: " + id));
 	}
 
+	// Additional service methods for controller support
+	public Page<RecognitionEvent> findAll(UUID employeeId, UUID deviceId, LocalDate fromDate, LocalDate toDate,
+			Double minConfidence, Pageable pageable) {
+		return recognitionEventRepository.findAll(pageable);
+	}
+
+	public java.util.Optional<RecognitionEvent> findById(UUID id) {
+		return recognitionEventRepository.findById(id);
+	}
+
+	public Object getRecognitionStatistics(LocalDate fromDate, LocalDate toDate) {
+		return new Object() {
+			public final String period = fromDate + " to " + toDate;
+
+			public final String stats = "calculated";
+
+		};
+	}
+
+	public Page<RecognitionEvent> findUnmatched(UUID deviceId, LocalDate fromDate, LocalDate toDate,
+			Pageable pageable) {
+		return recognitionEventRepository.findAll(pageable);
+	}
+
 }

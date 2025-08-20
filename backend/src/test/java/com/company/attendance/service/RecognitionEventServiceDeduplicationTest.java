@@ -59,7 +59,8 @@ class RecognitionEventServiceDeduplicationTest {
 		testEmployee = new Employee();
 		testEmployee.setId(UUID.randomUUID());
 		testEmployee.setEmployeeCode("EMP001");
-		testEmployee.setName("Test Employee");
+		testEmployee.setFirstName("Test");
+		testEmployee.setLastName("Employee");
 
 		testDevice = new Device();
 		testDevice.setId(UUID.randomUUID());

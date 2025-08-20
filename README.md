@@ -181,12 +181,28 @@ make backend      # Build backend
 make edge         # Build edge service
 ```
 
+## 🎯 Milestone Status
+
+All development milestones have been completed:
+
+- ✅ **Milestone 1**: Scaffold & Infrastructure - Docker compose, database setup
+- ✅ **Milestone 2**: DB & Migrations - Flyway, pgvector, schema design  
+- ✅ **Milestone 3**: Backend Core API - Spring Boot, JWT security, REST APIs
+- ✅ **Milestone 4**: Edge MVP - Python recognition pipeline, FAISS, MinIO
+- ✅ **Milestone 5**: Enrollment Path - Face template management, CLI tools
+- ✅ **Milestone 6**: Attendance Policy & Windows - Time-based business rules  
+- ✅ **Milestone 7**: Observability & CI - Prometheus, health checks, GitHub Actions
+- ✅ **Milestone 8**: Hardening - Security, encryption, deduplication, resilience
+
+**System Status: Production Ready** 🚀
+
 ## 📈 Monitoring
 
-- Health checks for all services
-- Prometheus metrics endpoint
+- Health checks for all services (`/actuator/health`)
+- Prometheus metrics endpoint (`/actuator/prometheus`)
 - Structured logging with correlation IDs
 - Performance metrics (FPS, queue length, success rates)
+- Automated CI/CD pipeline with quality gates
 
 ## 🔧 Configuration
 

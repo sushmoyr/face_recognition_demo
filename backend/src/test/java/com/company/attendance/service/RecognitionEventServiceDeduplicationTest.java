@@ -30,249 +30,238 @@ import static org.mockito.Mockito.*;
 @ExtendWith(MockitoExtension.class)
 class RecognitionEventServiceDeduplicationTest {
 
-    @Mock
-    private RecognitionEventRepository recognitionEventRepository;
+	@Mock
+	private RecognitionEventRepository recognitionEventRepository;
 
-    @Mock
-    private EmployeeRepository employeeRepository;
+	@Mock
+	private EmployeeRepository employeeRepository;
 
-    @Mock
-    private DeviceRepository deviceRepository;
+	@Mock
+	private DeviceRepository deviceRepository;
 
-    @Mock
-    private AttendanceService attendanceService;
+	@Mock
+	private AttendanceService attendanceService;
 
-    @Mock
-    private HashUtils hashUtils;
+	@Mock
+	private HashUtils hashUtils;
 
-    @InjectMocks
-    private RecognitionEventService recognitionEventService;
+	@InjectMocks
+	private RecognitionEventService recognitionEventService;
 
-    private Employee testEmployee;
-    private Device testDevice;
-    private RecognitionEventRequest testRequest;
+	private Employee testEmployee;
 
-    @BeforeEach
-    void setUp() {
-        testEmployee = new Employee();
-        testEmployee.setId(UUID.randomUUID());
-        testEmployee.setEmployeeCode("EMP001");
-        testEmployee.setName("Test Employee");
+	private Device testDevice;
 
-        testDevice = new Device();
-        testDevice.setId(UUID.randomUUID());
-        testDevice.setDeviceCode("DEV001");
+	private RecognitionEventRequest testRequest;
 
-        testRequest = new RecognitionEventRequest();
-        testRequest.setDeviceId(testDevice.getId());
-        testRequest.setTopCandidateEmployeeId(testEmployee.getId());
-        testRequest.setCapturedAt(Instant.now());
-        testRequest.setEmbedding(new float[512]); // Empty embedding for test
-        testRequest.setSimilarityScore(0.85);
-        testRequest.setLivenessScore(0.95);
-        testRequest.setLivenessPassed(true);
-        testRequest.setSnapshotUrl("https://test.com/image.jpg");
-        testRequest.setProcessingDurationMs(150);
-    }
+	@BeforeEach
+	void setUp() {
+		testEmployee = new Employee();
+		testEmployee.setId(UUID.randomUUID());
+		testEmployee.setEmployeeCode("EMP001");
+		testEmployee.setName("Test Employee");
 
-    @Test
-    void testProcessRecognition_NewEvent_Success() {
-        // Given
-        String testHash = "test-hash-12345";
-        
-        when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
-        
-        RecognitionEvent savedEvent = new RecognitionEvent();
-        savedEvent.setId(UUID.randomUUID());
-        savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+		testDevice = new Device();
+		testDevice.setId(UUID.randomUUID());
+		testDevice.setDeviceCode("DEV001");
 
-        // When
-        RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+		testRequest = new RecognitionEventRequest();
+		testRequest.setDeviceId(testDevice.getId());
+		testRequest.setTopCandidateEmployeeId(testEmployee.getId());
+		testRequest.setCapturedAt(Instant.now());
+		testRequest.setEmbedding(new float[512]); // Empty embedding for test
+		testRequest.setSimilarityScore(0.85);
+		testRequest.setLivenessScore(0.95);
+		testRequest.setLivenessPassed(true);
+		testRequest.setSnapshotUrl("https://test.com/image.jpg");
+		testRequest.setProcessingDurationMs(150);
+	}
 
-        // Then
-        assertNotNull(result);
-        assertEquals(RecognitionEvent.RecognitionStatus.PROCESSED, result.getStatus());
-        
-        verify(hashUtils).generateRecognitionHash(
-            eq("https://test.com/image.jpg"), 
-            eq("EMP001"), 
-            eq(testDevice.getId().toString()), 
-            eq(testRequest.getCapturedAt())
-        );
-        verify(recognitionEventRepository).existsByDedupHash(testHash);
-        verify(recognitionEventRepository).save(any(RecognitionEvent.class));
-        verify(attendanceService).processRecognitionEvent(any(RecognitionEvent.class));
-    }
+	@Test
+	void testProcessRecognition_NewEvent_Success() {
+		// Given
+		String testHash = "test-hash-12345";
 
-    @Test
-    void testProcessRecognition_DuplicateEvent_ReturnsDuplicate() {
-        // Given
-        String testHash = "duplicate-hash-12345";
-        
-        when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(true);
-        
-        RecognitionEvent duplicateEvent = new RecognitionEvent();
-        duplicateEvent.setId(UUID.randomUUID());
-        duplicateEvent.setStatus(RecognitionEvent.RecognitionStatus.DUPLICATE);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(duplicateEvent);
+		when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
 
-        // When
-        RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+		RecognitionEvent savedEvent = new RecognitionEvent();
+		savedEvent.setId(UUID.randomUUID());
+		savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
 
-        // Then
-        assertNotNull(result);
-        assertEquals(RecognitionEvent.RecognitionStatus.DUPLICATE, result.getStatus());
-        
-        verify(recognitionEventRepository).existsByDedupHash(testHash);
-        verify(recognitionEventRepository).save(argThat(event -> 
-            event.getStatus() == RecognitionEvent.RecognitionStatus.DUPLICATE &&
-            event.getDedupHash().equals(testHash)
-        ));
-        
-        // Should not process attendance for duplicates
-        verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
-    }
+		// When
+		RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
 
-    @Test
-    void testProcessRecognition_UnknownEmployee_UsesUnknown() {
-        // Given
-        String testHash = "unknown-employee-hash";
-        UUID unknownEmployeeId = UUID.randomUUID();
-        
-        testRequest.setTopCandidateEmployeeId(unknownEmployeeId);
-        
-        when(employeeRepository.findById(unknownEmployeeId)).thenReturn(Optional.empty());
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), eq("unknown"), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
-        
-        RecognitionEvent savedEvent = new RecognitionEvent();
-        savedEvent.setId(UUID.randomUUID());
-        savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+		// Then
+		assertNotNull(result);
+		assertEquals(RecognitionEvent.RecognitionStatus.PROCESSED, result.getStatus());
 
-        // When
-        RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+		verify(hashUtils).generateRecognitionHash(eq("https://test.com/image.jpg"), eq("EMP001"),
+				eq(testDevice.getId().toString()), eq(testRequest.getCapturedAt()));
+		verify(recognitionEventRepository).existsByDedupHash(testHash);
+		verify(recognitionEventRepository).save(any(RecognitionEvent.class));
+		verify(attendanceService).processRecognitionEvent(any(RecognitionEvent.class));
+	}
 
-        // Then
-        assertNotNull(result);
-        verify(hashUtils).generateRecognitionHash(
-            eq("https://test.com/image.jpg"), 
-            eq("unknown"), 
-            eq(testDevice.getId().toString()), 
-            eq(testRequest.getCapturedAt())
-        );
-        
-        // Should not process attendance for unknown employee
-        verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
-    }
+	@Test
+	void testProcessRecognition_DuplicateEvent_ReturnsDuplicate() {
+		// Given
+		String testHash = "duplicate-hash-12345";
 
-    @Test
-    void testProcessRecognition_NoTopCandidate_UsesUnknown() {
-        // Given
-        String testHash = "no-candidate-hash";
-        
-        testRequest.setTopCandidateEmployeeId(null);
-        
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), eq("unknown"), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
-        
-        RecognitionEvent savedEvent = new RecognitionEvent();
-        savedEvent.setId(UUID.randomUUID());
-        savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+		when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(true);
 
-        // When
-        RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+		RecognitionEvent duplicateEvent = new RecognitionEvent();
+		duplicateEvent.setId(UUID.randomUUID());
+		duplicateEvent.setStatus(RecognitionEvent.RecognitionStatus.DUPLICATE);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(duplicateEvent);
 
-        // Then
-        assertNotNull(result);
-        verify(hashUtils).generateRecognitionHash(
-            eq("https://test.com/image.jpg"), 
-            eq("unknown"), 
-            eq(testDevice.getId().toString()), 
-            eq(testRequest.getCapturedAt())
-        );
-        verify(employeeRepository, never()).findById(any());
-    }
+		// When
+		RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
 
-    @Test
-    void testProcessRecognition_InvalidMatch_NoAttendanceProcessing() {
-        // Given
-        String testHash = "invalid-match-hash";
-        
-        // Create employee that would result in invalid match (low similarity)
-        testRequest.setSimilarityScore(0.3); // Below threshold
-        
-        when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
-        
-        RecognitionEvent savedEvent = new RecognitionEvent();
-        savedEvent.setId(UUID.randomUUID());
-        savedEvent.setEmployee(testEmployee);
-        savedEvent.setSimilarityScore(0.3);
-        savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+		// Then
+		assertNotNull(result);
+		assertEquals(RecognitionEvent.RecognitionStatus.DUPLICATE, result.getStatus());
 
-        // When
-        RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+		verify(recognitionEventRepository).existsByDedupHash(testHash);
+		verify(recognitionEventRepository)
+			.save(argThat(event -> event.getStatus() == RecognitionEvent.RecognitionStatus.DUPLICATE
+					&& event.getDedupHash().equals(testHash)));
 
-        // Then
-        assertNotNull(result);
-        verify(recognitionEventRepository).save(any(RecognitionEvent.class));
-        
-        // Should not process attendance for invalid match
-        verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
-    }
+		// Should not process attendance for duplicates
+		verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
+	}
 
-    @Test
-    void testProcessRecognition_AttendanceProcessingFailure_ContinuesExecution() {
-        // Given
-        String testHash = "attendance-failure-hash";
-        
-        when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
-        when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
-        when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
-            .thenReturn(testHash);
-        when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
-        
-        RecognitionEvent savedEvent = new RecognitionEvent();
-        savedEvent.setId(UUID.randomUUID());
-        savedEvent.setEmployee(testEmployee);
-        savedEvent.setSimilarityScore(0.85);
-        savedEvent.setLivenessPassed(true);
-        savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
-        when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
-        
-        // Mock attendance service to throw exception
-        doThrow(new RuntimeException("Attendance processing failed"))
-            .when(attendanceService).processRecognitionEvent(any(RecognitionEvent.class));
+	@Test
+	void testProcessRecognition_UnknownEmployee_UsesUnknown() {
+		// Given
+		String testHash = "unknown-employee-hash";
+		UUID unknownEmployeeId = UUID.randomUUID();
 
-        // When/Then - should not throw exception
-        assertDoesNotThrow(() -> {
-            RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
-            assertNotNull(result);
-        });
-        
-        verify(attendanceService).processRecognitionEvent(any(RecognitionEvent.class));
-    }
+		testRequest.setTopCandidateEmployeeId(unknownEmployeeId);
 
-    @Test
+		when(employeeRepository.findById(unknownEmployeeId)).thenReturn(Optional.empty());
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), eq("unknown"), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
+
+		RecognitionEvent savedEvent = new RecognitionEvent();
+		savedEvent.setId(UUID.randomUUID());
+		savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+
+		// When
+		RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+
+		// Then
+		assertNotNull(result);
+		verify(hashUtils).generateRecognitionHash(eq("https://test.com/image.jpg"), eq("unknown"),
+				eq(testDevice.getId().toString()), eq(testRequest.getCapturedAt()));
+
+		// Should not process attendance for unknown employee
+		verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
+	}
+
+	@Test
+	void testProcessRecognition_NoTopCandidate_UsesUnknown() {
+		// Given
+		String testHash = "no-candidate-hash";
+
+		testRequest.setTopCandidateEmployeeId(null);
+
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), eq("unknown"), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
+
+		RecognitionEvent savedEvent = new RecognitionEvent();
+		savedEvent.setId(UUID.randomUUID());
+		savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+
+		// When
+		RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+
+		// Then
+		assertNotNull(result);
+		verify(hashUtils).generateRecognitionHash(eq("https://test.com/image.jpg"), eq("unknown"),
+				eq(testDevice.getId().toString()), eq(testRequest.getCapturedAt()));
+		verify(employeeRepository, never()).findById(any());
+	}
+
+	@Test
+	void testProcessRecognition_InvalidMatch_NoAttendanceProcessing() {
+		// Given
+		String testHash = "invalid-match-hash";
+
+		// Create employee that would result in invalid match (low similarity)
+		testRequest.setSimilarityScore(0.3); // Below threshold
+
+		when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
+
+		RecognitionEvent savedEvent = new RecognitionEvent();
+		savedEvent.setId(UUID.randomUUID());
+		savedEvent.setEmployee(testEmployee);
+		savedEvent.setSimilarityScore(0.3);
+		savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+
+		// When
+		RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+
+		// Then
+		assertNotNull(result);
+		verify(recognitionEventRepository).save(any(RecognitionEvent.class));
+
+		// Should not process attendance for invalid match
+		verify(attendanceService, never()).processRecognitionEvent(any(RecognitionEvent.class));
+	}
+
+	@Test
+	void testProcessRecognition_AttendanceProcessingFailure_ContinuesExecution() {
+		// Given
+		String testHash = "attendance-failure-hash";
+
+		when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
+		when(deviceRepository.findById(testDevice.getId())).thenReturn(Optional.of(testDevice));
+		when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
+			.thenReturn(testHash);
+		when(recognitionEventRepository.existsByDedupHash(testHash)).thenReturn(false);
+
+		RecognitionEvent savedEvent = new RecognitionEvent();
+		savedEvent.setId(UUID.randomUUID());
+		savedEvent.setEmployee(testEmployee);
+		savedEvent.setSimilarityScore(0.85);
+		savedEvent.setLivenessPassed(true);
+		savedEvent.setStatus(RecognitionEvent.RecognitionStatus.PROCESSED);
+		when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenReturn(savedEvent);
+
+		// Mock attendance service to throw exception
+		doThrow(new RuntimeException("Attendance processing failed")).when(attendanceService)
+			.processRecognitionEvent(any(RecognitionEvent.class));
+
+		// When/Then - should not throw exception
+		assertDoesNotThrow(() -> {
+			RecognitionEvent result = recognitionEventService.processRecognition(testRequest);
+			assertNotNull(result);
+		});
+
+		verify(attendanceService).processRecognitionEvent(any(RecognitionEvent.class));
+	}
+
+	@Test
     void testCreateRecognitionEventFromRequest_AllFields() {
         // Given
         when(employeeRepository.findById(testEmployee.getId())).thenReturn(Optional.of(testEmployee));
@@ -280,7 +269,7 @@ class RecognitionEventServiceDeduplicationTest {
         when(hashUtils.generateRecognitionHash(anyString(), anyString(), anyString(), any(Instant.class)))
             .thenReturn("test-hash");
         when(recognitionEventRepository.existsByDedupHash(anyString())).thenReturn(false);
-        
+
         RecognitionEvent mockSavedEvent = new RecognitionEvent();
         when(recognitionEventRepository.save(any(RecognitionEvent.class))).thenAnswer(invocation -> {
             RecognitionEvent event = invocation.getArgument(0);
@@ -299,7 +288,7 @@ class RecognitionEventServiceDeduplicationTest {
             assertEquals(testRequest.getSnapshotUrl(), event.getSnapshotUrl());
             assertEquals(testRequest.getProcessingDurationMs(), event.getProcessingDurationMs());
             assertEquals("test-hash", event.getDedupHash());
-            
+
             return event;
         });
 
@@ -309,4 +298,5 @@ class RecognitionEventServiceDeduplicationTest {
         // Then
         verify(recognitionEventRepository).save(any(RecognitionEvent.class));
     }
+
 }

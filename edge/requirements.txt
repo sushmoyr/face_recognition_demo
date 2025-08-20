@@ -29,6 +29,13 @@ asyncio-mqtt>=0.16.0
 # Image processing utilities
 Pillow>=10.1.0
 
+# Cryptography for configuration encryption
+cryptography>=41.0.0
+
+# Development and testing
+pytest>=7.4.0
+pytest-asyncio>=0.23.0
+
 # Data structures and utilities
 dataclasses-json>=0.6.0
 

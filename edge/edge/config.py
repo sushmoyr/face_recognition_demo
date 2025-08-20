@@ -178,8 +178,24 @@ def load_config() -> EdgeConfig:
     config.model.embedding_model_url = os.getenv("EMBEDDING_MODEL_URL")
     config.model.liveness_model_url = os.getenv("LIVENESS_MODEL_URL")
     
-    # Processing configuration
-    config.processing.rtsp_url = os.getenv("RTSP_URL")
+    # Processing configuration with RTSP encryption support
+    rtsp_url = os.getenv("RTSP_URL")
+    if rtsp_url and rtsp_url.startswith("rtsp://encrypted:"):
+        # Decrypt RTSP URL if encrypted
+        try:
+            from .utils.config_encryption import ConfigEncryption
+            encryptor = ConfigEncryption()
+            config.processing.rtsp_url = encryptor.decrypt_rtsp_url(rtsp_url)
+            logger.debug("RTSP URL decrypted successfully")
+        except ImportError:
+            logger.error("Config encryption module not available for encrypted RTSP URL")
+            config.processing.rtsp_url = None
+        except Exception as e:
+            logger.error("Failed to decrypt RTSP URL", error=str(e))
+            config.processing.rtsp_url = None
+    else:
+        config.processing.rtsp_url = rtsp_url
+    
     config.processing.video_file_path = os.getenv("VIDEO_FILE_PATH")
     config.processing.camera_index = int(os.getenv("CAMERA_INDEX", "0"))
     config.processing.target_fps = int(os.getenv("TARGET_FPS", "10"))
@@ -200,16 +216,16 @@ def load_config() -> EdgeConfig:
     config.device.device_id = os.getenv("DEVICE_ID", "edge-001")
     config.device.device_location = os.getenv("DEVICE_LOCATION", "Main Entrance")
     
-    # Backend configuration
+    # Backend configuration with encryption support for sensitive values
     config.backend.base_url = os.getenv("BACKEND_URL", "http://localhost:8080")
     config.backend.username = os.getenv("BACKEND_USERNAME")
-    config.backend.password = os.getenv("BACKEND_PASSWORD")
-    config.backend.api_key = os.getenv("BACKEND_API_KEY")
+    config.backend.password = _decrypt_if_encrypted(os.getenv("BACKEND_PASSWORD"))
+    config.backend.api_key = _decrypt_if_encrypted(os.getenv("BACKEND_API_KEY"))
     
-    # Storage configuration
+    # Storage configuration with encryption support
     config.storage.url = os.getenv("MINIO_URL", "http://localhost:9000")
-    config.storage.access_key = os.getenv("MINIO_ACCESS_KEY", "minioadmin")
-    config.storage.secret_key = os.getenv("MINIO_SECRET_KEY", "minioadmin123")
+    config.storage.access_key = _decrypt_if_encrypted(os.getenv("MINIO_ACCESS_KEY", "minioadmin"))
+    config.storage.secret_key = _decrypt_if_encrypted(os.getenv("MINIO_SECRET_KEY", "minioadmin123"))
     config.storage.bucket_name = os.getenv("MINIO_BUCKET", "attendance-faces")
     
     # Monitoring configuration
@@ -228,9 +244,28 @@ def load_config() -> EdgeConfig:
     logger.info("Configuration loaded successfully", 
                device_id=config.device.device_id,
                backend_url=config.backend.base_url,
-               gpu_enabled=config.gpu_enabled)
+               gpu_enabled=config.gpu_enabled,
+               rtsp_encrypted=rtsp_url and rtsp_url.startswith("rtsp://encrypted:"))
     
     return config
+
+
+def _decrypt_if_encrypted(value: Optional[str]) -> Optional[str]:
+    """Decrypt a value if it appears to be encrypted."""
+    if not value:
+        return value
+    
+    # Simple heuristic: if it looks like base64 and is long enough, try to decrypt
+    if len(value) > 20 and value.replace('+', '').replace('/', '').replace('=', '').isalnum():
+        try:
+            from .utils.config_encryption import ConfigEncryption
+            encryptor = ConfigEncryption()
+            return encryptor.decrypt_value(value)
+        except Exception:
+            # If decryption fails, assume it's not encrypted
+            return value
+    
+    return value
 
 
 def _validate_config(config: EdgeConfig) -> None:

@@ -48,6 +48,13 @@ public interface RecognitionEventRepository extends JpaRepository<RecognitionEve
 	Page<RecognitionEvent> findByCapturedAtBetween(Instant startTime, Instant endTime, Pageable pageable);
 
 	/**
+	 * Find all recognition events ordered by captured time descending.
+	 * @param pageable Pagination parameters
+	 * @return Page of recognition events
+	 */
+	Page<RecognitionEvent> findAllByOrderByCapturedAtDesc(Pageable pageable);
+
+	/**
 	 * Find recognition events by status.
 	 * @param status Recognition status
 	 * @param pageable Pagination parameters
